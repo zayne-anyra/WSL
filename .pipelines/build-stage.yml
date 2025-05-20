@@ -336,6 +336,7 @@ stages:
             displayName: Collect symbols
 
           - powershell: |
+              rm -r packages
               mkdir appxsym
               foreach ($arch in @("x64", "ARM64"))
               {
