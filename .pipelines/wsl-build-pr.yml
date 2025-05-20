@@ -4,10 +4,6 @@ trigger:
     - master
     - release/*
 
-git:
-  fetchDepth: -1
-  fetchTags: true
-
 stages:
 - template: build-stage.yml@self
   parameters:
