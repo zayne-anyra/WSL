@@ -92,7 +92,7 @@ stages:
         timeoutInMinutes: 120
         pool:
           type: windows
-          vmImage: 'windows-latest'
+          vmImage: 'windows-2025'
 
         variables:
           NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS: 60
@@ -329,7 +329,7 @@ stages:
                   mkdir $pdbFolder
                   foreach ($filter in @("*.pdb", "*.debug"))
                   {
-                      foreach ($e in (Get-ChildItem -Recurse -Path $binFolder -Filter $filter)) {Copy-Item -Path $e.fullname -Destination (Join-Path $pdbFolder $e.name)}
+                      foreach ($e in (Get-ChildItem -Recurse -Path $binFolder -Filter $filter)) {Move-Item -Path $e.fullname -Destination (Join-Path $pdbFolder $e.name)}
                   }
               }
 
