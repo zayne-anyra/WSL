@@ -23,8 +23,7 @@ jobs:
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 420
     pool:
-          type: windows
-          vmImage: 'windows-latest'
+      type: cloudtestagentless
     steps:
       - task: CloudTestServerBuildTask@2
         inputs:

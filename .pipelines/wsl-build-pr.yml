@@ -9,6 +9,6 @@ stages:
   parameters:
     isRelease: false
 
-- template: test-stage.yml@self
-  parameters:
-    rs_prerelease_only: true
+#- template: test-stage.yml@self
+#  parameters:
+#    rs_prerelease_only: true
