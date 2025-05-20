@@ -161,47 +161,48 @@ stages:
                     condition: and(succeeded(), eq('${{ parameters.isRelease }}', true))
                     displayName: "Build ${{ target.target }} (${{ platform }})"
 
-                  - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
-                    displayName: "Sign ${{ target.target }} (${{ platform }})"
-                    condition: and(succeeded(), eq('${{ parameters.isRelease }}', true))
-                    inputs:
-                      ConnectedServiceName: ${{ parameters.esrp.ConnectedServiceName}}
-                      signConfigType: ${{ parameters.esrp.signConfigType }}
-                      SessionTimeout: ${{ parameters.esrp.SessionTimeout }}
-                      MaxConcurrency: ${{ parameters.esrp.MaxConcurrency }}
-                      MaxRetryAttempts: ${{ parameters.esrp.MaxRetryAttempts }}
-                      ServiceEndpointUrl: ${{ parameters.esrp.ServiceEndpointUrl }}
-                      AuthAKVName: ${{ parameters.esrp.AuthAKVName }}
-                      AuthSignCertName: ${{ parameters.esrp.AuthSignCertName }}
-                      AppRegistrationClientId: ${{ parameters.esrp.AppRegistrationClientId }}
-                      AppRegistrationTenantId: ${{ parameters.esrp.AppRegistrationTenantId }}
-                      FolderPath: "bin\\${{ platform }}"
-                      Pattern: "${{ target.pattern }}"
-                      UseMSIAuthentication: true
-                      EsrpClientId: ${{ parameters.esrp.EsrpClientId }}
-                      inlineOperation: |
-                        [
-                              {
-                                  "KeyCode": "CP-230012",
-                                  "OperationCode": "SigntoolSign",
-                                  "Parameters" : {
-                                        "OpusName" : "Microsoft",
-                                        "OpusInfo" : "http://www.microsoft.com",
-                                        "FileDigest" : "/fd \"SHA256\"",
-                                        "PageHash" : "/NPH",
-                                        "TimeStamp" : "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+                  - ${{ if eq(parameters.isRelease, 'true') }}:
+                      - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
+                        displayName: "Sign ${{ target.target }} (${{ platform }})"
+                        condition: and(succeeded(), eq('${{ parameters.isRelease }}', true))
+                        inputs:
+                          ConnectedServiceName: ${{ parameters.esrp.ConnectedServiceName}}
+                          signConfigType: ${{ parameters.esrp.signConfigType }}
+                          SessionTimeout: ${{ parameters.esrp.SessionTimeout }}
+                          MaxConcurrency: ${{ parameters.esrp.MaxConcurrency }}
+                          MaxRetryAttempts: ${{ parameters.esrp.MaxRetryAttempts }}
+                          ServiceEndpointUrl: ${{ parameters.esrp.ServiceEndpointUrl }}
+                          AuthAKVName: ${{ parameters.esrp.AuthAKVName }}
+                          AuthSignCertName: ${{ parameters.esrp.AuthSignCertName }}
+                          AppRegistrationClientId: ${{ parameters.esrp.AppRegistrationClientId }}
+                          AppRegistrationTenantId: ${{ parameters.esrp.AppRegistrationTenantId }}
+                          FolderPath: "bin\\${{ platform }}"
+                          Pattern: "${{ target.pattern }}"
+                          UseMSIAuthentication: true
+                          EsrpClientId: ${{ parameters.esrp.EsrpClientId }}
+                          inlineOperation: |
+                            [
+                                  {
+                                      "KeyCode": "CP-230012",
+                                      "OperationCode": "SigntoolSign",
+                                      "Parameters" : {
+                                            "OpusName" : "Microsoft",
+                                            "OpusInfo" : "http://www.microsoft.com",
+                                            "FileDigest" : "/fd \"SHA256\"",
+                                            "PageHash" : "/NPH",
+                                            "TimeStamp" : "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+                                        },
+                                        "ToolName" : "sign",
+                                        "ToolVersion" : "1.0"
                                     },
-                                    "ToolName" : "sign",
-                                    "ToolVersion" : "1.0"
-                                },
-                                {
-                                    "KeyCode" : "CP-230012",
-                                    "OperationCode" : "SigntoolVerify",
-                                    "Parameters" : {},
-                                    "ToolName" : "sign",
-                                    "ToolVersion" : "1.0"
-                                }
-                          ]
+                                    {
+                                        "KeyCode" : "CP-230012",
+                                        "OperationCode" : "SigntoolVerify",
+                                        "Parameters" : {},
+                                        "ToolName" : "sign",
+                                        "ToolVersion" : "1.0"
+                                    }
+                              ]
 
                   # Replace the intermediate wslsettings binaries file with the signed versions so that any future steps building wslsettings will use the signed versions
                   - task: PowerShell@2
@@ -230,47 +231,48 @@ stages:
                       $arch = '${{ platform }}'
                       Copy-Item -Path "bin\$arch\release\wsl.msi" -Destination "$(ob_outputDirectory)\bundle\wsl.$(version.WSL_PACKAGE_VERSION).$arch.msi"
 
-          - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
-            displayName: "Sign the bundle"
-            condition: and(succeeded(), eq('${{ parameters.isRelease }}', true))
-            inputs:
-              ConnectedServiceName: ${{ parameters.esrp.ConnectedServiceName}}
-              signConfigType: ${{ parameters.esrp.signConfigType }}
-              SessionTimeout: ${{ parameters.esrp.SessionTimeout }}
-              MaxConcurrency: ${{ parameters.esrp.MaxConcurrency }}
-              MaxRetryAttempts: ${{ parameters.esrp.MaxRetryAttempts }}
-              ServiceEndpointUrl: ${{ parameters.esrp.ServiceEndpointUrl }}
-              AuthAKVName: ${{ parameters.esrp.AuthAKVName }}
-              AuthSignCertName: ${{ parameters.esrp.AuthSignCertName }}
-              AppRegistrationClientId: ${{ parameters.esrp.AppRegistrationClientId }}
-              AppRegistrationTenantId: ${{ parameters.esrp.AppRegistrationTenantId }}
-              FolderPath: "bundle"
-              Pattern: "*.msixbundle"
-              UseMSIAuthentication: true
-              EsrpClientId: ${{ parameters.esrp.EsrpClientId }}
-              inlineOperation: |
-                [
-                      {
-                          "KeyCode": "CP-230012",
-                          "OperationCode": "SigntoolSign",
-                          "Parameters" : {
-                                "OpusName" : "Microsoft",
-                                "OpusInfo" : "http://www.microsoft.com",
-                                "FileDigest" : "/fd \"SHA256\"",
-                                "PageHash" : "/NPH",
-                                "TimeStamp" : "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+          - ${{ if eq(parameters.isRelease, 'true') }}:
+              - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
+                displayName: "Sign the bundle"
+                condition: and(succeeded(), eq('${{ parameters.isRelease }}', true))
+                inputs:
+                  ConnectedServiceName: ${{ parameters.esrp.ConnectedServiceName}}
+                  signConfigType: ${{ parameters.esrp.signConfigType }}
+                  SessionTimeout: ${{ parameters.esrp.SessionTimeout }}
+                  MaxConcurrency: ${{ parameters.esrp.MaxConcurrency }}
+                  MaxRetryAttempts: ${{ parameters.esrp.MaxRetryAttempts }}
+                  ServiceEndpointUrl: ${{ parameters.esrp.ServiceEndpointUrl }}
+                  AuthAKVName: ${{ parameters.esrp.AuthAKVName }}
+                  AuthSignCertName: ${{ parameters.esrp.AuthSignCertName }}
+                  AppRegistrationClientId: ${{ parameters.esrp.AppRegistrationClientId }}
+                  AppRegistrationTenantId: ${{ parameters.esrp.AppRegistrationTenantId }}
+                  FolderPath: "bundle"
+                  Pattern: "*.msixbundle"
+                  UseMSIAuthentication: true
+                  EsrpClientId: ${{ parameters.esrp.EsrpClientId }}
+                  inlineOperation: |
+                    [
+                          {
+                              "KeyCode": "CP-230012",
+                              "OperationCode": "SigntoolSign",
+                              "Parameters" : {
+                                    "OpusName" : "Microsoft",
+                                    "OpusInfo" : "http://www.microsoft.com",
+                                    "FileDigest" : "/fd \"SHA256\"",
+                                    "PageHash" : "/NPH",
+                                    "TimeStamp" : "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+                                },
+                                "ToolName" : "sign",
+                                "ToolVersion" : "1.0"
                             },
-                            "ToolName" : "sign",
-                            "ToolVersion" : "1.0"
-                        },
-                        {
-                            "KeyCode" : "CP-230012",
-                            "OperationCode" : "SigntoolVerify",
-                            "Parameters" : {},
-                            "ToolName" : "sign",
-                            "ToolVersion" : "1.0"
-                        }
-                  ]
+                            {
+                                "KeyCode" : "CP-230012",
+                                "OperationCode" : "SigntoolVerify",
+                                "Parameters" : {},
+                                "ToolName" : "sign",
+                                "ToolVersion" : "1.0"
+                            }
+                      ]
 
           - script: md.exe $(ob_outputDirectory)\bin\nuget
             displayName: "Create the nuget directory"
@@ -279,41 +281,42 @@ stages:
               - script: nuget.exe pack ${{ package }} -OutputDirectory $(ob_outputDirectory)\bin\nuget -NonInteractive
                 displayName: Build ${{ package }}
 
-          - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
-            displayName: "Sign nuget packages"
-            condition: and(succeeded(), eq('${{ parameters.isRelease }}', true))
-            inputs:
-              ConnectedServiceName: ${{ parameters.esrp.ConnectedServiceName}}
-              signConfigType: ${{ parameters.esrp.signConfigType }}
-              SessionTimeout: ${{ parameters.esrp.SessionTimeout }}
-              MaxConcurrency: ${{ parameters.esrp.MaxConcurrency }}
-              MaxRetryAttempts: ${{ parameters.esrp.MaxRetryAttempts }}
-              ServiceEndpointUrl: ${{ parameters.esrp.ServiceEndpointUrl }}
-              AuthAKVName: ${{ parameters.esrp.AuthAKVName }}
-              AuthSignCertName: ${{ parameters.esrp.AuthSignCertName }}
-              AppRegistrationClientId: ${{ parameters.esrp.AppRegistrationClientId }}
-              AppRegistrationTenantId: ${{ parameters.esrp.AppRegistrationTenantId }}
-              FolderPath: '$(ob_outputDirectory)\bin\nuget'
-              Pattern: "*.nupkg"
-              UseMSIAuthentication: true
-              EsrpClientId: ${{ parameters.esrp.EsrpClientId }}
-              inlineOperation: |
-                [
-                    {
-                        "KeyCode": "CP-401405",
-                        "OperationCode": "NuGetSign",
-                        "Parameters" : {},
-                          "ToolName" : "sign",
-                          "ToolVersion" : "1.0"
-                      },
-                      {
-                          "KeyCode" : "CP-401405",
-                          "OperationCode" : "NuGetVerify",
-                          "Parameters" : {},
-                          "ToolName" : "sign",
-                          "ToolVersion" : "1.0"
-                      }
-                ]
+          - ${{ if eq(parameters.isRelease, 'true') }}:
+              - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@5
+                displayName: "Sign nuget packages"
+                condition: and(succeeded(), eq('${{ parameters.isRelease }}', true))
+                inputs:
+                  ConnectedServiceName: ${{ parameters.esrp.ConnectedServiceName}}
+                  signConfigType: ${{ parameters.esrp.signConfigType }}
+                  SessionTimeout: ${{ parameters.esrp.SessionTimeout }}
+                  MaxConcurrency: ${{ parameters.esrp.MaxConcurrency }}
+                  MaxRetryAttempts: ${{ parameters.esrp.MaxRetryAttempts }}
+                  ServiceEndpointUrl: ${{ parameters.esrp.ServiceEndpointUrl }}
+                  AuthAKVName: ${{ parameters.esrp.AuthAKVName }}
+                  AuthSignCertName: ${{ parameters.esrp.AuthSignCertName }}
+                  AppRegistrationClientId: ${{ parameters.esrp.AppRegistrationClientId }}
+                  AppRegistrationTenantId: ${{ parameters.esrp.AppRegistrationTenantId }}
+                  FolderPath: '$(ob_outputDirectory)\bin\nuget'
+                  Pattern: "*.nupkg"
+                  UseMSIAuthentication: true
+                  EsrpClientId: ${{ parameters.esrp.EsrpClientId }}
+                  inlineOperation: |
+                    [
+                        {
+                            "KeyCode": "CP-401405",
+                            "OperationCode": "NuGetSign",
+                            "Parameters" : {},
+                              "ToolName" : "sign",
+                              "ToolVersion" : "1.0"
+                          },
+                          {
+                              "KeyCode" : "CP-401405",
+                              "OperationCode" : "NuGetVerify",
+                              "Parameters" : {},
+                              "ToolName" : "sign",
+                              "ToolVersion" : "1.0"
+                          }
+                    ]
 
           - powershell: |
               foreach ($arch in @("x64", "ARM64"))
