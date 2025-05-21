@@ -58,9 +58,7 @@ stages:
       
         displayName: "Formatting & localization checks"
         timeoutInMinutes: 30
-        pool:
-          type: windows
-          vmImage: 'windows-latest'
+        pool: wsl-build
         variables:
           ob_outputDirectory: '$(Build.SourcesDirectory)\out'
 
@@ -90,9 +88,7 @@ stages:
       - job: build
         displayName: "Build WSL package"
         timeoutInMinutes: 120
-        pool:
-          type: windows
-          vmImage: 'windows-2025'
+        pool: wsl-build
 
         variables:
           NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS: 60
@@ -336,7 +332,6 @@ stages:
             displayName: Collect symbols
 
           - powershell: |
-              rm -r packages
               mkdir appxsym
               foreach ($arch in @("x64", "ARM64"))
               {
